@@ -133,27 +133,39 @@ export function NetworkGraph() {
       .attr("stroke-dasharray", (d) => (d.type === "coordination" ? "4 2" : "none"))
       .attr("stroke-opacity", 0.5);
 
+    const dragBehavior =
+      d3
+        .drag<SVGGElement, GraphNode>()
+        .on("start", (event, d) => {
+          if (!event.active) simulation.alphaTarget(0.3).restart();
+          d.fx = d.x;
+          d.fy = d.y;
+        })
+        .on("drag", (event, d) => {
+          d.fx = event.x;
+          d.fy = event.y;
+        })
+        .on("end", (event, d) => {
+          if (!event.active) simulation.alphaTarget(0);
+          d.fx = null;
+          d.fy = null;
+        });
+
     const nodeElements = nodeGroup
-      .selectAll("g")
+      .selectAll<SVGGElement, GraphNode>("g")
       .data(nodes)
-      .join("g")
-      .call(
-        d3.drag<SVGGElement, GraphNode>()
-          .on("start", (event, d) => {
-            if (!event.active) simulation.alphaTarget(0.3).restart();
-            d.fx = d.x;
-            d.fy = d.y;
-          })
-          .on("drag", (event, d) => {
-            d.fx = event.x;
-            d.fy = event.y;
-          })
-          .on("end", (event, d) => {
-            if (!event.active) simulation.alphaTarget(0);
-            d.fx = null;
-            d.fy = null;
-          })
-      );
+      .join("g");
+
+    nodeElements.call(
+      dragBehavior as unknown as (
+        selection: d3.Selection<
+          SVGGElement,
+          GraphNode,
+          SVGGElement,
+          unknown
+        >
+      ) => void
+    );
 
     nodeElements
       .append("circle")
