@@ -114,8 +114,11 @@ export function VoteAnomaly() {
               fontSize: 11,
               fontFamily: "monospace",
             }}
-            formatter={(value: number, name: string) => [value.toFixed(2), name]}
-          />
+
+            formatter={(value, name) => [
+              typeof value === "number" ? value.toFixed(2) : String(value ?? ""),
+              String(name ?? ""),
+            ]} />
           <ReferenceLine
             x={0.35}
             stroke="#ef4444"
@@ -136,7 +139,9 @@ export function VoteAnomaly() {
           .map((d, i) => (
             <div key={i} className="text-xs text-gray-300">
               <span className="text-rose-400 mr-2">●</span>
-              <span className="text-gray-500">[{d.upvote_ratio.toFixed(0)}%]</span>{" "}
+              <span className="text-gray-500">
+                [{(d.upvote_ratio * 100).toFixed(0)}%]
+              </span>
               <span>{d.title}</span>{" "}
               <span className="text-gray-500">— u/{d.author}</span>
             </div>
