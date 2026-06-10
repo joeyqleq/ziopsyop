@@ -82,8 +82,8 @@ export function FlairComposition({ data }: Props) {
               fontSize: 11,
               fontFamily: "var(--font-jet), monospace",
             }}
-            formatter={(value: number | string, name: string) => [
-              mode === "share" ? `${Number(value ?? 0)}%` : value,
+            formatter={(value, name) => [
+              mode === "share" ? `${Number(value ?? 0)}%` : String(value ?? ""),
               name,
             ]}
           />

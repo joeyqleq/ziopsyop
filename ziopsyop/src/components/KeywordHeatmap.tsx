@@ -99,8 +99,8 @@ export function KeywordHeatmap({ data }: Props) {
               fontSize: 11,
               fontFamily: "var(--font-jet), monospace",
             }}
-            formatter={(value: number | string, name: string) => [
-              norm === "share" ? `${value}%` : value,
+            formatter={(value, name) => [
+              norm === "share" ? `${value}%` : String(value ?? ""),
               name,
             ]}
           />

@@ -88,7 +88,7 @@ export function AnomalyDetector({ data }: Props) {
               fontSize: 11,
               fontFamily: "var(--font-jet), monospace",
             }}
-            formatter={(v: number) => [`${Number(v).toFixed(2)}σ`, "deviation"]}
+            formatter={(v) => [`${Number(v ?? 0).toFixed(2)}σ`, "deviation"]}
             cursor={{ fill: "rgba(255,255,255,0.04)" }}
           />
           <ReferenceLine
