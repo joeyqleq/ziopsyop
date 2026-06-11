@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   AreaChart,
   Area,
@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import { SegToggle } from "@/components/fx/ChartFrame";
 
 interface FlairMonth {
   month: string;
@@ -21,73 +22,95 @@ interface Props {
 }
 
 const FLAIR_COLORS: Record<string, string> = {
-  Israeli: "#0066ff",
-  Lebanese: "#00cc44",
-  "Jewish/Diaspora": "#6644ff",
-  "Unflaired/Other": "#555555",
-  "Other Arab": "#ffaa00",
-  Palestinian: "#cc0000",
-  Iranian: "#ff6600",
+  Israeli: "#ff4d5e",
+  "Jewish/Diaspora": "#e8b44c",
+  Lebanese: "#3ee6c1",
+  "Unflaired/Other": "#565b64",
 };
 
+type Mode = "share" | "raw";
+
 export function FlairComposition({ data }: Props) {
+  const [mode, setMode] = useState<Mode>("share");
+
   const chartData = useMemo(() => {
     return data.map((d) => {
       const row: Record<string, string | number> = { month: d.month.slice(2) };
       const total = Object.values(d.categories).reduce((s, c) => s + c.total, 0) || 1;
-      Object.entries(FLAIR_COLORS).forEach(([cat]) => {
+      Object.keys(FLAIR_COLORS).forEach((cat) => {
         const val = d.categories[cat]?.total || 0;
-        row[cat] = Math.round((val / total) * 100);
+        row[cat] = mode === "share" ? Math.round((val / total) * 100) : val;
       });
       return row;
     });
-  }, [data]);
+  }, [data, mode]);
 
   return (
-    <ResponsiveContainer width="100%" height={280}>
-      <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-        <XAxis
-          dataKey="month"
-          tick={{ fill: "#666", fontSize: 9 }}
-          interval={7}
-          axisLine={{ stroke: "#222" }}
-          tickLine={false}
+    <div>
+      <div className="flex justify-end mb-3">
+        <SegToggle<Mode>
+          options={[
+            { value: "share", label: "% Share" },
+            { value: "raw", label: "Volume" },
+          ]}
+          value={mode}
+          onChange={setMode}
         />
-        <YAxis
-          tick={{ fill: "#666", fontSize: 9 }}
-          axisLine={false}
-          tickLine={false}
-          width={35}
-          domain={[0, 100]}
-          unit="%"
-        />
-        <Tooltip
-          contentStyle={{
-            background: "rgba(10,10,30,0.95)",
-            border: "1px solid rgba(0,102,255,0.3)",
-            borderRadius: 8,
-            fontSize: 11,
-          }}
-formatter={(value) => `${Number(value ?? 0)}%`}
-        />
-        <Legend
-          wrapperStyle={{ fontSize: 10, paddingTop: 8 }}
-          iconType="circle"
-          iconSize={8}
-        />
-        {Object.entries(FLAIR_COLORS).map(([cat, color]) => (
-          <Area
-            key={cat}
-            type="monotone"
-            dataKey={cat}
-            stroke={color}
-            strokeWidth={0}
-            fill={color}
-            fillOpacity={0.7}
-            stackId="1"
+      </div>
+      <ResponsiveContainer width="100%" height={280}>
+        <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+          <XAxis
+            dataKey="month"
+            tick={{ fill: "#565b64", fontSize: 9 }}
+            interval={7}
+            axisLine={{ stroke: "rgba(232,234,233,0.08)" }}
+            tickLine={false}
           />
-        ))}
-      </AreaChart>
-    </ResponsiveContainer>
+          <YAxis
+            tick={{ fill: "#565b64", fontSize: 9 }}
+            axisLine={false}
+            tickLine={false}
+            width={40}
+            domain={mode === "share" ? [0, 100] : undefined}
+            unit={mode === "share" ? "%" : undefined}
+          />
+          <Tooltip
+            contentStyle={{
+              background: "rgba(8,8,12,0.96)",
+              border: "1px solid rgba(232,234,233,0.16)",
+              borderRadius: 6,
+              fontSize: 11,
+              fontFamily: "var(--font-jet), monospace",
+            }}
+            formatter={(value, name) => [
+              mode === "share" ? `${Number(value ?? 0)}%` : String(value ?? ""),
+              name,
+            ]}
+          />
+          <Legend
+            wrapperStyle={{
+              fontSize: 10,
+              paddingTop: 8,
+              fontFamily: "var(--font-jet), monospace",
+              letterSpacing: "0.1em",
+            }}
+            iconType="square"
+            iconSize={8}
+          />
+          {Object.entries(FLAIR_COLORS).map(([cat, color]) => (
+            <Area
+              key={cat}
+              type="monotone"
+              dataKey={cat}
+              stroke={color}
+              strokeWidth={0.5}
+              fill={color}
+              fillOpacity={0.65}
+              stackId="1"
+            />
+          ))}
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
   );
 }

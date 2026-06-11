@@ -1,19 +1,27 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { AuroraBackground } from "@/components/AuroraBackground";
-import { Navigation } from "@/components/Navigation";
+import { PageShell } from "@/components/PageShell";
+import { ChartFrame, SegToggle } from "@/components/fx/ChartFrame";
+import { TracedCard } from "@/components/fx/TracedCard";
+import { CinematicTitle } from "@/components/fx/CinematicTitle";
+import { DecryptText } from "@/components/fx/DecryptText";
 
-const AttackMap = dynamic(() => import("@/components/viz/AttackMap").then((m) => m.AttackMap), {
-  ssr: false,
-  loading: () => (
-    <div className="h-[600px] flex items-center justify-center text-cyan-400 font-mono animate-pulse">
-      LOADING MAP INTELLIGENCE...
-    </div>
-  ),
-});
+const AttackMap = dynamic(
+  () => import("@/components/viz/AttackMap").then((m) => m.AttackMap),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[600px] flex items-center justify-center">
+        <p className="font-mono text-xs tracking-[0.3em] text-primary caret">
+          LOADING GEOSPATIAL INTELLIGENCE
+        </p>
+      </div>
+    ),
+  }
+);
 
 interface MapEvent {
   event_id: string;
@@ -21,131 +29,264 @@ interface MapEvent {
   attacker: string;
   attack_type: string;
   target_category: string;
-  location: { name: string; lat: number; lon: number; governorate: string; accuracy: string };
+  location: {
+    name: string;
+    lat: number;
+    lon: number;
+    governorate: string;
+    accuracy: string;
+  };
   casualties: { killed_total: number; wounded_total: number };
   ihl_classification: string;
   description?: string;
   source_urls: string[];
 }
 
+type AttackerFilter = "all" | "IDF" | "Hezbollah" | "UNIFIL";
+type SeverityFilter = "all" | "high" | "medium" | "low";
+type IhlFilter = "all" | "violation" | "compliant";
+
+function severityOf(e: MapEvent) {
+  const k = e.casualties.killed_total;
+  if (k >= 5) return "high";
+  if (k >= 1) return "medium";
+  return "low";
+}
+
 export default function MapPage() {
   const [events, setEvents] = useState<MapEvent[]>([]);
-  const [filters, setFilters] = useState({
-    attacker: "all",
-    dateRange: "all",
-    severity: "all",
-  });
+  const [attacker, setAttacker] = useState<AttackerFilter>("all");
+  const [severity, setSeverity] = useState<SeverityFilter>("all");
+  const [ihl, setIhl] = useState<IhlFilter>("all");
 
-  useState(() => {
+  useEffect(() => {
     fetch("/data/events.json")
       .then((r) => r.json())
       .then(setEvents)
-      .catch(() => setEvents(getSampleEvents()));
-  });
+      .catch(() => setEvents([]));
+  }, []);
 
-  const filteredEvents = useMemo(() => {
-    let result = events;
-    if (filters.attacker !== "all") {
-      result = result.filter((e) => e.attacker === filters.attacker);
-    }
-    return result;
-  }, [events, filters]);
+  const filtered = useMemo(() => {
+    return events.filter((e) => {
+      if (attacker !== "all" && e.attacker !== attacker) return false;
+      if (severity !== "all" && severityOf(e) !== severity) return false;
+      if (ihl === "violation" && !e.ihl_classification.includes("violation"))
+        return false;
+      if (ihl === "compliant" && !e.ihl_classification.includes("compliant"))
+        return false;
+      return true;
+    });
+  }, [events, attacker, severity, ihl]);
+
+  const stats = useMemo(() => {
+    const killed = filtered.reduce((s, e) => s + e.casualties.killed_total, 0);
+    const wounded = filtered.reduce((s, e) => s + e.casualties.wounded_total, 0);
+    const violations = filtered.filter((e) =>
+      e.ihl_classification.includes("violation")
+    ).length;
+    const civilian = filtered.filter((e) =>
+      e.target_category.startsWith("civilian")
+    ).length;
+    return { count: filtered.length, killed, wounded, violations, civilian };
+  }, [filtered]);
 
   return (
-    <main className="relative min-h-screen">
-      <AuroraBackground />
-      <Navigation />
-
-      <div className="relative z-10 max-w-7xl mx-auto px-4 pt-20 pb-8 space-y-6">
-        <motion.header
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center"
-        >
-          <h1 className="text-3xl font-bold glow-text">Geospatial Attack Map</h1>
-          <p className="text-xs text-gray-400 mt-2 font-mono">
-            Every documented military action in Lebanon, Jan 2024 — Jun 2026
+    <PageShell backdrop="warp">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 pt-28 pb-10">
+        <header className="text-center pb-8">
+          <p className="font-mono text-[10px] tracking-[0.5em] text-primary mb-3">
+            <DecryptText text="//  SECTION 03 — KINETIC GROUND TRUTH" speed={28} />
           </p>
-        </motion.header>
+          <CinematicTitle
+            as="h1"
+            text="ATTACK MAP"
+            className="font-mono font-bold text-[clamp(1.8rem,6vw,3.4rem)] leading-none tracking-[0.08em] text-foreground"
+          />
+          <p className="mt-4 max-w-2xl mx-auto text-sm text-muted leading-relaxed text-balance">
+            Every documented military action in Lebanon, January 2024 — June
+            2026. This is the physical reality the influence operation exists to
+            reframe. Filter by actor, severity and IHL classification to
+            interrogate the record yourself.
+          </p>
+        </header>
 
-        <div className="flex flex-wrap gap-3 justify-center">
-          <select
-            value={filters.attacker}
-            onChange={(e) => setFilters((f) => ({ ...f, attacker: e.target.value }))}
-            className="bg-gray-900/80 border border-gray-700 rounded-lg px-3 py-1.5 text-xs font-mono text-gray-300"
-          >
-            <option value="all">All Actors</option>
-            <option value="IDF">IDF</option>
-            <option value="Hezbollah">Hezbollah</option>
-            <option value="UNIFIL">UNIFIL Incidents</option>
-          </select>
-          <select
-            value={filters.severity}
-            onChange={(e) => setFilters((f) => ({ ...f, severity: e.target.value }))}
-            className="bg-gray-900/80 border border-gray-700 rounded-lg px-3 py-1.5 text-xs font-mono text-gray-300"
-          >
-            <option value="all">All Severity</option>
-            <option value="high">High Casualty</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
-          </select>
+        {/* live ledger of filtered selection */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+          {[
+            { label: "Incidents", value: stats.count, cls: "text-primary", color: "var(--primary)" },
+            { label: "Killed", value: stats.killed, cls: "text-threat", color: "var(--threat)" },
+            { label: "Wounded", value: stats.wounded, cls: "text-archive", color: "var(--archive)" },
+            { label: "IHL Violations", value: stats.violations, cls: "text-threat", color: "var(--threat)" },
+            { label: "Civilian Targets", value: stats.civilian, cls: "text-viz-blue", color: "var(--viz-blue)" },
+          ].map((s, i) => (
+            <motion.div
+              key={s.label}
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.06 }}
+            >
+              <TracedCard traceColor={s.color} className="p-3.5 text-center h-full">
+                <p className={`font-mono text-lg md:text-xl font-bold tabular-nums ${s.cls}`}>
+                  {s.value.toLocaleString()}
+                </p>
+                <p className="font-mono text-[9px] tracking-[0.2em] text-muted uppercase mt-1">
+                  {s.label}
+                </p>
+              </TracedCard>
+            </motion.div>
+          ))}
         </div>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="glass-panel-strong overflow-hidden"
+        <ChartFrame
+          exhibit="EX-17"
+          title="GEOSPATIAL INCIDENT RECORD"
+          subtitle="Marker shape encodes incident type; pulse intensity encodes casualty weight. Click any marker for the full sourced record."
+          accent="var(--threat)"
+          classification="GEOLOCATED"
+          controls={
+            <div className="flex flex-wrap gap-2 justify-end">
+              <SegToggle<AttackerFilter>
+                options={[
+                  { value: "all", label: "All actors" },
+                  { value: "IDF", label: "IDF" },
+                  { value: "Hezbollah", label: "HZB" },
+                  { value: "UNIFIL", label: "UNIFIL" },
+                ]}
+                value={attacker}
+                onChange={setAttacker}
+              />
+              <SegToggle<SeverityFilter>
+                options={[
+                  { value: "all", label: "Any severity" },
+                  { value: "high", label: "High" },
+                  { value: "medium", label: "Med" },
+                  { value: "low", label: "Low" },
+                ]}
+                value={severity}
+                onChange={setSeverity}
+                threat
+              />
+              <SegToggle<IhlFilter>
+                options={[
+                  { value: "all", label: "All IHL" },
+                  { value: "violation", label: "Violations" },
+                  { value: "compliant", label: "Compliant" },
+                ]}
+                value={ihl}
+                onChange={setIhl}
+              />
+            </div>
+          }
+          commentary={{
+            reads:
+              "Geolocated military incidents with attacker, target category, casualties and an International Humanitarian Law assessment for each strike.",
+            means:
+              "Filter to civilian target categories and the geography speaks: residential quarters, hospitals, ambulances, journalists, water infrastructure. The violation density maps onto population centers, not military positions.",
+            puzzle:
+              "This map is why the operation on the other pages exists. A conversation that stayed honest about these coordinates could never sell 'dialogue'. The data the subreddit suppresses is the data you are looking at.",
+          }}
         >
-          <AttackMap events={filteredEvents} />
-        </motion.div>
+          <AttackMap events={filtered} />
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Legend color="#ef4444" shape="circle" label="IDF airstrike on civilians" />
-          <Legend color="#f97316" shape="triangle" label="IDF strike on military" />
-          <Legend color="#3b82f6" shape="diamond" label="UNIFIL incident" />
-          <Legend color="#eab308" shape="star" label="Hezbollah launch" />
-          <Legend color="#111" shape="x" label="Assassination" />
-          <Legend color="#22c55e" shape="square" label="LAF incident" />
-          <Legend color="#888" shape="circle" label="Unattributed" />
+          {/* legend */}
+          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2">
+            <Legend color="#ff4d5e" shape="circle" label="IDF strike on civilians" />
+            <Legend color="#e8b44c" shape="triangle" label="IDF strike on military" />
+            <Legend color="#5b9bff" shape="diamond" label="UNIFIL incident" />
+            <Legend color="#3ee6c1" shape="star" label="Hezbollah launch" />
+            <Legend color="#a78bfa" shape="x" label="Assassination" />
+            <Legend color="#8a8f98" shape="square" label="LAF / unattributed" />
+          </div>
+        </ChartFrame>
+
+        {/* incident docket */}
+        <div className="mt-8">
+          <div className="flex items-baseline justify-between mb-4">
+            <h2 className="font-mono text-sm font-bold tracking-[0.15em] text-foreground uppercase">
+              Incident Docket
+            </h2>
+            <p className="font-mono text-[10px] tracking-[0.15em] text-muted-2">
+              {filtered.length} RECORDS IN CURRENT VIEW
+            </p>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {filtered.slice(0, 12).map((e, i) => (
+              <motion.div
+                key={e.event_id}
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-20px" }}
+                transition={{ delay: (i % 3) * 0.06, duration: 0.4 }}
+              >
+                <TracedCard
+                  traceColor={
+                    e.ihl_classification.includes("violation")
+                      ? "var(--threat)"
+                      : "var(--primary)"
+                  }
+                  className="p-4 h-full"
+                >
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span className="font-mono text-[9px] tracking-[0.2em] text-muted-2">
+                      {e.event_id}
+                    </span>
+                    <span
+                      className={`stamp ${
+                        e.ihl_classification.includes("violation")
+                          ? "text-threat"
+                          : "text-primary"
+                      }`}
+                    >
+                      {e.ihl_classification.replace(/_/g, " ")}
+                    </span>
+                  </div>
+                  <p className="font-mono text-[10px] text-archive mb-1">
+                    {e.date} — {e.location.name}
+                  </p>
+                  <p className="text-xs text-muted leading-relaxed">
+                    {e.description}
+                  </p>
+                  <div className="mt-3 flex items-center gap-3 font-mono text-[10px] text-muted-2">
+                    <span>
+                      <span className="text-threat">{e.casualties.killed_total}</span> killed
+                    </span>
+                    <span>
+                      <span className="text-archive">{e.casualties.wounded_total}</span> wounded
+                    </span>
+                    <span className="ml-auto uppercase">{e.attacker}</span>
+                  </div>
+                </TracedCard>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </div>
-    </main>
+    </PageShell>
   );
 }
 
-function Legend({ color, shape, label }: { color: string; shape: string; label: string }) {
+function Legend({
+  color,
+  shape,
+  label,
+}: {
+  color: string;
+  shape: string;
+  label: string;
+}) {
   return (
-    <div className="flex items-center gap-2 text-[10px] text-gray-400">
+    <div className="flex items-center gap-2 font-mono text-[10px] tracking-[0.06em] text-muted">
       <span
-        className="w-3 h-3 inline-block border"
+        className="w-2.5 h-2.5 inline-block shrink-0"
         style={{
           backgroundColor: color,
-          borderColor: color,
-          borderRadius: shape === "circle" ? "50%" : shape === "diamond" ? "2px" : "0",
-          transform: shape === "diamond" ? "rotate(45deg) scale(0.8)" : "none",
+          borderRadius:
+            shape === "circle" ? "50%" : shape === "diamond" ? "2px" : "1px",
+          transform: shape === "diamond" ? "rotate(45deg) scale(0.85)" : "none",
         }}
+        aria-hidden="true"
       />
       <span>{label}</span>
     </div>
   );
-}
-
-function getSampleEvents(): MapEvent[] {
-  return [
-    { event_id: "EVT-2024-001", date: "2024-10-01", attacker: "IDF", attack_type: "airstrike", target_category: "civilian_residential", location: { name: "Dahiyeh, Beirut", lat: 33.84, lon: 35.52, governorate: "Beirut", accuracy: "estimated" }, casualties: { killed_total: 6, wounded_total: 22 }, ihl_classification: "likely_violation", description: "Airstrike on residential building in Dahiyeh suburb", source_urls: [] },
-    { event_id: "EVT-2024-002", date: "2024-10-08", attacker: "IDF", attack_type: "airstrike", target_category: "civilian_residential", location: { name: "Nabatieh", lat: 33.38, lon: 35.48, governorate: "Nabatieh", accuracy: "exact" }, casualties: { killed_total: 16, wounded_total: 40 }, ihl_classification: "confirmed_violation", description: "Strike on Nabatieh market during business hours", source_urls: [] },
-    { event_id: "EVT-2024-003", date: "2024-10-13", attacker: "IDF", attack_type: "ground_incursion", target_category: "civilian_residential", location: { name: "Aita al-Shaab", lat: 33.12, lon: 35.33, governorate: "Bint Jbeil", accuracy: "exact" }, casualties: { killed_total: 3, wounded_total: 8 }, ihl_classification: "likely_violation", description: "Bulldozer operations demolishing civilian homes", source_urls: [] },
-    { event_id: "EVT-2024-004", date: "2024-09-17", attacker: "IDF", attack_type: "pager_operation", target_category: "civilian_residential", location: { name: "Multiple locations, Lebanon", lat: 33.88, lon: 35.5, governorate: "Multiple", accuracy: "district_level" }, casualties: { killed_total: 12, wounded_total: 2800 }, ihl_classification: "confirmed_violation", description: "Coordinated pager detonations across Lebanon", source_urls: [] },
-    { event_id: "EVT-2024-005", date: "2024-11-05", attacker: "IDF", attack_type: "airstrike", target_category: "ambulance", location: { name: "Baalbek", lat: 34.0, lon: 36.2, governorate: "Baalbek-Hermel", accuracy: "estimated" }, casualties: { killed_total: 4, wounded_total: 2 }, ihl_classification: "confirmed_violation", description: "Double-tap strike on paramedics responding to initial bombing", source_urls: [] },
-    { event_id: "EVT-2024-006", date: "2024-10-22", attacker: "Hezbollah", attack_type: "rocket", target_category: "military_idf", location: { name: "Kiryat Shmona area", lat: 33.21, lon: 35.57, governorate: "Border", accuracy: "estimated" }, casualties: { killed_total: 0, wounded_total: 3 }, ihl_classification: "likely_compliant", description: "Rocket barrage targeting IDF border positions", source_urls: [] },
-    { event_id: "EVT-2024-007", date: "2024-11-15", attacker: "IDF", attack_type: "artillery", target_category: "civilian_residential", location: { name: "Khiam", lat: 33.18, lon: 35.55, governorate: "Marjayoun", accuracy: "exact" }, casualties: { killed_total: 8, wounded_total: 15 }, ihl_classification: "likely_violation", description: "Artillery bombardment of residential quarter", source_urls: [] },
-    { event_id: "EVT-2024-008", date: "2024-12-01", attacker: "IDF", attack_type: "drone_strike", target_category: "journalist", location: { name: "Hasbaya", lat: 33.4, lon: 35.68, governorate: "Hasbaya", accuracy: "exact" }, casualties: { killed_total: 2, wounded_total: 0 }, ihl_classification: "confirmed_violation", description: "Drone strike killing two journalists in marked press vehicle", source_urls: [] },
-    { event_id: "EVT-2025-001", date: "2025-01-15", attacker: "IDF", attack_type: "drone_surveillance", target_category: "civilian_residential", location: { name: "Tyre", lat: 33.27, lon: 35.2, governorate: "South Lebanon", accuracy: "exact" }, casualties: { killed_total: 0, wounded_total: 0 }, ihl_classification: "likely_violation", description: "Persistent drone surveillance over residential areas post-ceasefire", source_urls: [] },
-    { event_id: "EVT-2025-002", date: "2025-02-10", attacker: "IDF", attack_type: "ground_incursion", target_category: "civilian_residential", location: { name: "Maroun al-Ras", lat: 33.1, lon: 35.43, governorate: "Bint Jbeil", accuracy: "exact" }, casualties: { killed_total: 1, wounded_total: 4 }, ihl_classification: "confirmed_violation", description: "IDF troops fire on civilians attempting to return to village", source_urls: [] },
-    { event_id: "EVT-2025-003", date: "2025-03-20", attacker: "IDF", attack_type: "airstrike", target_category: "infrastructure_water", location: { name: "Litani River area", lat: 33.33, lon: 35.45, governorate: "South Lebanon", accuracy: "estimated" }, casualties: { killed_total: 0, wounded_total: 0 }, ihl_classification: "likely_violation", description: "Strike on water infrastructure near Litani River", source_urls: [] },
-    { event_id: "EVT-2026-001", date: "2026-01-20", attacker: "IDF", attack_type: "ground_incursion", target_category: "civilian_residential", location: { name: "Bint Jbeil", lat: 33.12, lon: 35.43, governorate: "Bint Jbeil", accuracy: "exact" }, casualties: { killed_total: 5, wounded_total: 12 }, ihl_classification: "confirmed_violation", description: "Second ground invasion begins - systematic destruction of border villages", source_urls: [] },
-    { event_id: "EVT-2026-002", date: "2026-02-15", attacker: "Hezbollah", attack_type: "drone_strike", target_category: "military_idf", location: { name: "Metula", lat: 33.28, lon: 35.58, governorate: "Border", accuracy: "estimated" }, casualties: { killed_total: 3, wounded_total: 7 }, ihl_classification: "likely_compliant", description: "FPV drone strike on IDF armored vehicle", source_urls: [] },
-    { event_id: "EVT-2026-003", date: "2026-03-01", attacker: "IDF", attack_type: "airstrike", target_category: "medical_facility", location: { name: "Sidon", lat: 33.56, lon: 35.37, governorate: "South Lebanon", accuracy: "exact" }, casualties: { killed_total: 11, wounded_total: 30 }, ihl_classification: "confirmed_violation", description: "Airstrike on hospital complex", source_urls: [] },
-  ];
 }

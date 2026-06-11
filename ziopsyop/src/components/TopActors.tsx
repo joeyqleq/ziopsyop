@@ -1,10 +1,12 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import { SegToggle } from "@/components/fx/ChartFrame";
 
 interface Author {
   author: string;
-  flair: string;
+  flair?: string;
   posts: number;
   comments: number;
   total: number;
@@ -14,60 +16,83 @@ interface Props {
   data: Author[];
 }
 
-const FLAIR_BADGE: Record<string, string> = {
-  Israeli: "bg-blue-500/20 text-blue-300 border-blue-500/30",
-  Lebanese: "bg-green-500/20 text-green-300 border-green-500/30",
-  "Diaspora Jew": "bg-violet-500/20 text-violet-300 border-violet-500/30",
-  "Diaspora Lebanese": "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
-  "Diaspora Israeli": "bg-sky-500/20 text-sky-300 border-sky-500/30",
-};
+type Sort = "total" | "posts" | "comments";
 
-function getFlairStyle(flair: string | undefined) {
-  if (!flair) return "bg-gray-500/20 text-gray-300 border-gray-500/30";
-  for (const [key, cls] of Object.entries(FLAIR_BADGE)) {
-    if (flair.toLowerCase().includes(key.toLowerCase())) return cls;
-  }
-  return "bg-gray-500/20 text-gray-300 border-gray-500/30";
+function flairColor(flair?: string) {
+  const f = (flair || "").toLowerCase();
+  if (f.includes("israel")) return "border-threat/40 text-threat bg-threat/10";
+  if (f.includes("leban")) return "border-primary/40 text-primary bg-primary/10";
+  if (f.includes("jew") || f.includes("diaspora")) return "border-archive/40 text-archive bg-archive/10";
+  return "border-borderc text-muted bg-black/30";
 }
 
 export function TopActors({ data }: Props) {
-  const maxTotal = data[0]?.total || 1;
+  const [sort, setSort] = useState<Sort>("total");
+
+  const sorted = useMemo(
+    () => [...data].sort((a, b) => b[sort] - a[sort]).slice(0, 20),
+    [data, sort]
+  );
+  const max = sorted[0]?.[sort] || 1;
 
   return (
-    <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
-      {data.slice(0, 20).map((author, i) => (
-        <motion.div
-          key={author.author}
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: i * 0.03 }}
-          className="flex items-center gap-3 p-2 rounded-lg neo-inset"
-        >
-          <span className="text-xs font-mono text-gray-500 w-5">{i + 1}</span>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium truncate">u/{author.author}</span>
-              <span
-                className={`text-[10px] px-1.5 py-0.5 rounded border ${getFlairStyle(author.flair)}`}
-              >
-                {author.flair || "Unknown"}
+    <div>
+      <div className="flex justify-end mb-3">
+        <SegToggle<Sort>
+          options={[
+            { value: "total", label: "Total" },
+            { value: "posts", label: "Posts" },
+            { value: "comments", label: "Comments" },
+          ]}
+          value={sort}
+          onChange={setSort}
+        />
+      </div>
+      <div className="space-y-1.5 max-h-[400px] overflow-y-auto pr-2">
+        {sorted.map((author, i) => (
+          <motion.div
+            key={author.author}
+            initial={{ opacity: 0, x: -12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.025, duration: 0.35 }}
+            className="group flex items-center gap-3 px-3 py-2 rounded-md border border-borderc bg-black/25 hover:border-primary/30 hover:bg-black/40 transition-colors"
+          >
+            <span className="font-mono text-[10px] text-muted-2 w-6 tabular-nums">
+              {String(i + 1).padStart(2, "0")}
+            </span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs text-foreground truncate">
+                  u/{author.author}
+                </span>
+                {author.flair && (
+                  <span
+                    className={`font-mono text-[9px] tracking-[0.08em] px-1.5 py-px rounded-[3px] border ${flairColor(author.flair)}`}
+                  >
+                    {author.flair}
+                  </span>
+                )}
+              </div>
+              <div className="mt-1.5 h-1 bg-black/50 rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full bg-primary/70 group-hover:bg-primary transition-colors"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(author[sort] / max) * 100}%` }}
+                  transition={{ delay: i * 0.025 + 0.15, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                />
+              </div>
+            </div>
+            <div className="text-right shrink-0">
+              <span className="font-mono text-xs text-primary tabular-nums">
+                {author[sort].toLocaleString()}
+              </span>
+              <span className="block font-mono text-[9px] text-muted-2 tabular-nums">
+                {author.posts}p / {author.comments}c
               </span>
             </div>
-            <div className="mt-1 h-1.5 bg-black/30 rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-violet-500"
-                style={{ width: `${(author.total / maxTotal) * 100}%` }}
-              />
-            </div>
-          </div>
-          <div className="text-right">
-            <span className="text-xs font-mono text-cyan-400">{author.total.toLocaleString()}</span>
-            <span className="text-[10px] text-gray-500 block">
-              {author.posts}p / {author.comments}c
-            </span>
-          </div>
-        </motion.div>
-      ))}
+          </motion.div>
+        ))}
+      </div>
     </div>
   );
 }
