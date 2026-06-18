@@ -2,3 +2,10 @@ raw/
 node_modules/
 .next/
 
+# environment / secrets — never commit
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
