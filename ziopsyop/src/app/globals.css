@@ -27,6 +27,12 @@
   --viz-blue: #5b9bff;
   --viz-violet: #a78bfa;
 
+  /* brand signal accents — pulled from the eye logo (light touches only) */
+  --accent-blue: #4ea8ff;
+  --accent-yellow: #ffd23f;
+  --accent-blue-dim: rgba(78, 168, 255, 0.14);
+  --accent-yellow-dim: rgba(255, 210, 63, 0.14);
+
   --radius: 0.5rem;
 
   /* mouse-traced border vars (set by JS) */
@@ -47,6 +53,8 @@
   --color-archive: var(--archive);
   --color-viz-blue: var(--viz-blue);
   --color-viz-violet: var(--viz-violet);
+  --color-accent-blue: var(--accent-blue);
+  --color-accent-yellow: var(--accent-yellow);
   --font-sans: var(--font-grotesk), system-ui, sans-serif;
   --font-mono: var(--font-jet), "JetBrains Mono", monospace;
 }
@@ -325,6 +333,98 @@ body {
 }
 .animate-pulse-soft {
   animation: pulse-soft 2.6s ease-in-out infinite;
+}
+
+/* ============================================================
+   GLITCH WORDMARK — the two O's in ZI(0)PSY(0)P become live
+   glitching zeroes: RGB channel split (blue/yellow from the eye
+   logo), scanline flicker, and intermittent slice displacement.
+   ============================================================ */
+.gw {
+  display: inline-flex;
+  align-items: baseline;
+  white-space: nowrap;
+}
+.gw-char {
+  display: inline-block;
+  position: relative;
+}
+/* the zero glyph */
+.gw-zero {
+  position: relative;
+  display: inline-block;
+  color: var(--foreground);
+  animation: gw-flicker 4.2s steps(1) infinite;
+  text-shadow:
+    0 0 6px color-mix(in srgb, var(--accent-blue) 50%, transparent),
+    0 0 14px color-mix(in srgb, var(--accent-blue) 22%, transparent);
+}
+.gw-zero::before,
+.gw-zero::after {
+  content: attr(data-z);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.9;
+}
+/* blue channel — drifts left, sliced from the top */
+.gw-zero::before {
+  color: var(--accent-blue);
+  mix-blend-mode: screen;
+  animation: gw-shift-blue 3.3s infinite linear alternate;
+  clip-path: inset(0 0 55% 0);
+}
+/* yellow channel — drifts right, sliced from the bottom */
+.gw-zero::after {
+  color: var(--accent-yellow);
+  mix-blend-mode: screen;
+  animation: gw-shift-yellow 2.7s infinite linear alternate;
+  clip-path: inset(55% 0 0 0);
+}
+/* random horizontal slice tear on the live layer */
+.gw-zero > .gw-slice {
+  position: absolute;
+  inset: 0;
+  color: var(--foreground);
+  background: var(--background);
+  animation: gw-tear 5.5s steps(1) infinite;
+  clip-path: inset(50% 0 50% 0);
+}
+
+@keyframes gw-flicker {
+  0%, 100% { opacity: 1; }
+  41% { opacity: 1; }
+  42% { opacity: 0.35; }
+  43% { opacity: 1; }
+  62% { opacity: 1; }
+  63% { opacity: 0.55; }
+  64% { opacity: 1; }
+  92% { opacity: 1; }
+  93% { opacity: 0.2; }
+  94% { opacity: 1; }
+}
+@keyframes gw-shift-blue {
+  0% { transform: translate(0, 0); }
+  20% { transform: translate(-1.5px, -1px); }
+  40% { transform: translate(1px, 0); }
+  60% { transform: translate(-2px, 1px); }
+  80% { transform: translate(0.5px, -0.5px); }
+  100% { transform: translate(-1px, 0); }
+}
+@keyframes gw-shift-yellow {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(1.5px, 1px); }
+  50% { transform: translate(-1px, 0); }
+  75% { transform: translate(2px, -1px); }
+  100% { transform: translate(1px, 0.5px); }
+}
+@keyframes gw-tear {
+  0%, 100% { clip-path: inset(50% 0 50% 0); opacity: 0; }
+  47% { clip-path: inset(50% 0 50% 0); opacity: 0; }
+  48% { clip-path: inset(20% 0 64% 0); opacity: 1; transform: translateX(3px); }
+  49% { clip-path: inset(70% 0 12% 0); opacity: 1; transform: translateX(-4px); }
+  50% { clip-path: inset(40% 0 44% 0); opacity: 1; transform: translateX(2px); }
+  51% { clip-path: inset(50% 0 50% 0); opacity: 0; transform: translateX(0); }
 }
 
 /* reduced motion */
