@@ -3,8 +3,8 @@
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { SpaceBackground } from "@/components/fx/SpaceBackground";
-import { CinematicTitle } from "@/components/fx/CinematicTitle";
 import { DecryptText } from "@/components/fx/DecryptText";
+import { GlitchWordmark } from "@/components/fx/GlitchWordmark";
 
 const TICKER_ITEMS = [
   "93,247 DATA POINTS INGESTED",
@@ -59,11 +59,16 @@ export function Hero() {
           <DecryptText text="//  SIGNAL FROM NOISE" speed={34} delay={300} />
         </p>
 
-        <CinematicTitle
-          as="h1"
-          text="ZIOPSYOP"
-          className="font-mono font-bold text-[clamp(3rem,11vw,7.5rem)] leading-none tracking-[0.06em] text-foreground"
-        />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96, filter: "blur(8px)" }}
+          animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+          transition={{ delay: 0.5, duration: 1, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <h1 className="sr-only">ZIOPSYOP</h1>
+          <GlitchWordmark
+            className="font-mono font-bold text-[clamp(3rem,11vw,7.5rem)] leading-none tracking-[0.06em] text-foreground"
+          />
+        </motion.div>
 
         <motion.p
           initial={{ opacity: 0, y: 14 }}

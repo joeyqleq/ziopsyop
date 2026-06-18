@@ -6,12 +6,14 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { GlitchWordmark } from "@/components/fx/GlitchWordmark";
 
 const NAV_ITEMS = [
   { href: "/", label: "DASHBOARD", code: "01" },
   { href: "/analysis", label: "ANALYSIS", code: "02" },
-  { href: "/map", label: "ATTACK MAP", code: "03" },
-  { href: "/about", label: "DOSSIER", code: "04" },
+  { href: "/battlefield", label: "BATTLEFIELD", code: "03" },
+  { href: "/map", label: "ATTACK MAP", code: "04" },
+  { href: "/about", label: "DOSSIER", code: "05" },
 ];
 
 const GLYPHS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ01<>/#";
@@ -148,9 +150,7 @@ export function Navigation() {
               priority
             />
           </motion.span>
-          <span className="font-mono text-[13px] font-bold tracking-[0.3em] text-foreground glow-primary">
-            ZIOPSYOP
-          </span>
+          <GlitchWordmark className="font-mono text-[13px] font-bold tracking-[0.3em] text-foreground" />        
         </Link>
 
         {/* desktop links */}

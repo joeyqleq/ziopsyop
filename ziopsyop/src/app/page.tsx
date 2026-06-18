@@ -376,7 +376,15 @@ export default function Home() {
                     >
                       Psy-Ops Analysis
                     </a>{" "}
-                    page; kinetic context lives on the{" "}
+                    page. The reality the pivot was built to bury — the war&apos;s
+                    real conduct, cost and outcome — is documented in{" "}
+                    <a
+                      href="/battlefield"
+                      className="text-accent-yellow hover:glow-primary transition-all"
+                    >
+                      Battlefield Forensics
+                    </a>
+                    ; kinetic context lives on the{" "}
                     <a
                       href="/map"
                       className="text-primary hover:glow-primary transition-all"
@@ -385,6 +393,15 @@ export default function Home() {
                     </a>
                     .
                   </p>
+                  <div className="mt-5 flex flex-wrap gap-3">
+                    <a
+                      href="/battlefield"
+                      className="group inline-flex items-center gap-2 rounded-md border border-accent-yellow/40 bg-accent-yellow/5 px-4 py-2.5 font-mono text-[11px] tracking-[0.2em] text-accent-yellow transition-all hover:bg-accent-yellow/10"
+                    >
+                      ENTER PART II — BATTLEFIELD FORENSICS
+                      <span className="transition-transform group-hover:translate-x-1">→</span>
+                    </a>
+                  </div>
                 </div>
               </TracedCard>
             </PixelReveal>

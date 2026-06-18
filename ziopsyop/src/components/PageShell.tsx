@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Navigation } from "@/components/Navigation";
 import { ShaderBackdrop } from "@/components/fx/ShaderBackdrop";
 import { AsciiEye } from "@/components/fx/AsciiEye";
+import { GlitchWordmark } from "@/components/fx/GlitchWordmark";
 
 /**
  * Uniform page chrome: living nav, brand shader backdrop, dossier footer.
@@ -38,8 +39,9 @@ export function SiteFooter() {
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-12 flex flex-col items-center gap-6 text-center">
         <AsciiEye />
         <div className="space-y-2">
-          <p className="font-mono text-[11px] tracking-[0.3em] text-foreground">
-            ZIOPSYOP<span className="text-primary">.ME</span>
+          <p className="flex items-center justify-center font-mono text-[11px] tracking-[0.3em] text-foreground">
+            <GlitchWordmark className="text-[11px] tracking-[0.3em]" />
+            <span className="text-primary">.ME</span>
           </p>
           <p className="font-mono text-[10px] tracking-[0.15em] text-muted-2">
             SIGNAL FROM NOISE — INFLUENCE OPERATION FORENSICS
@@ -49,6 +51,7 @@ export function SiteFooter() {
           {[
             { href: "/", label: "DASHBOARD" },
             { href: "/analysis", label: "ANALYSIS" },
+            { href: "/battlefield", label: "BATTLEFIELD" },
             { href: "/map", label: "ATTACK MAP" },
             { href: "/about", label: "DOSSIER" },
           ].map((l) => (

@@ -9,6 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   Cell,
+  LabelList,
 } from "recharts";
 import { SegToggle } from "@/components/fx/ChartFrame";
 import type { HardwareAttrition as HwData } from "@/lib/battlefield";
@@ -78,13 +79,15 @@ export function HardwareAttrition({ data }: { data: HwData }) {
             tickLine={false}
           />
           <Tooltip content={<HwTip metric={metric} />} cursor={{ fill: "rgba(255,255,255,0.04)" }} />
-          <Bar dataKey={metric} radius={[0, 3, 3, 0]} label={{
-            position: "right",
-            fill: "#8a8f98",
-            fontSize: 10,
-            fontFamily: "var(--font-jet), monospace",
-            formatter: (v: number) => (metric === "lossUsd" ? fmtUSD(v) : String(v)),
-          }}>
+          <Bar dataKey={metric} radius={[0, 3, 3, 0]}>
+            <LabelList
+              dataKey={metric}
+              position="right"
+              fill="#8a8f98"
+              fontSize={10}
+              fontFamily="var(--font-jet), monospace"
+              formatter={(v: unknown) => (metric === "lossUsd" ? fmtUSD(Number(v)) : String(v))}
+            />
             {rows.map((_, i) => (
               <Cell key={i} fill={PALETTE[i % PALETTE.length]} fillOpacity={0.82} />
             ))}
