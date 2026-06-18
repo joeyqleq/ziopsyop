@@ -89,9 +89,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+
+
     <html
       lang="en"
       className={`${grotesk.variable} ${jet.variable} h-full antialiased dark bg-background`}
+      suppressHydrationWarning
     >
       <head>
         <link
@@ -111,8 +114,10 @@ export default function RootLayout({
           {`
             var _paq = window._paq = window._paq || [];
             _paq.push(["setDocumentTitle", document.domain + "/" + document.title]);
-            _paq.push(["setCookieDomain", "*.ziopsyop.me"]);
-            _paq.push(["setDomains", ["*.ziopsyop.me","*.ziopsyop.me"]]);
+            if (window.location.hostname.includes('ziopsyop.me')) {
+              _paq.push(["setCookieDomain", "*.ziopsyop.me"]);
+              _paq.push(["setDomains", ["*.ziopsyop.me"]]);
+            }
             _paq.push(["enableCrossDomainLinking"]);
             _paq.push(['trackPageView']);
             _paq.push(['enableLinkTracking']);
@@ -148,3 +153,5 @@ export default function RootLayout({
     </html>
   );
 }
+
+
