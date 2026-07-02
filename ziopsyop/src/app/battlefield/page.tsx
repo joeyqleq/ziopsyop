@@ -14,9 +14,9 @@ import {
 } from "@/lib/battlefield";
 
 export const metadata: Metadata = {
-  title: "Battlefield Forensics — The Ground Truth | ZIOPSYOP",
+  title: "Part II — The Most Moral Army | ZIOPSYOP",
   description:
-    "The documented conduct, cost and outcome of the 2024–2026 IDF–Hezbollah war: targeting disparity, IHL compliance, cost asymmetry, hardware attrition and strategic failure — every figure sourced.",
+    "Testing the 'most moral army' claim against the documented record of the 2024–2026 IDF–Hezbollah war: targeting disparity, IHL compliance, cost asymmetry, hardware attrition and strategic outcome — every figure sourced.",
 };
 
 // data is read server-side with the service-role key; never shipped as creds

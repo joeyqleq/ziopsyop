@@ -9,11 +9,11 @@ import { cn } from "@/lib/utils";
 import { GlitchWordmark } from "@/components/fx/GlitchWordmark";
 
 const NAV_ITEMS = [
-  { href: "/", label: "DASHBOARD", code: "01" },
-  { href: "/analysis", label: "ANALYSIS", code: "02" },
-  { href: "/battlefield", label: "BATTLEFIELD", code: "03" },
-  { href: "/map", label: "ATTACK MAP", code: "04" },
-  { href: "/about", label: "DOSSIER", code: "05" },
+  { href: "/part-i", label: "PART I", code: "I", pillar: "I" },
+  { href: "/analysis", label: "ANALYSIS", code: "·", pillar: "I" },
+  { href: "/battlefield", label: "PART II", code: "II", pillar: "II" },
+  { href: "/map", label: "MAP", code: "·", pillar: "II" },
+  { href: "/about", label: "DOSSIER", code: "—", pillar: "" },
 ];
 
 const GLYPHS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ01<>/#";
@@ -159,11 +159,19 @@ export function Navigation() {
           onMouseLeave={() => setHovered(null)}
           aria-label="Main navigation"
         >
-          {NAV_ITEMS.map((item) => {
+          {NAV_ITEMS.map((item, idx) => {
             const active = pathname === item.href;
+            const prev = NAV_ITEMS[idx - 1];
+            const showDivider = prev && prev.pillar !== item.pillar;
             return (
+              <div key={item.href} className="flex items-center">
+                {showDivider && (
+                  <span
+                    className="mx-1.5 h-4 w-px bg-borderc"
+                    aria-hidden="true"
+                  />
+                )}
               <Link
-                key={item.href}
                 href={item.href}
                 onMouseEnter={() => setHovered(item.href)}
                 className="group relative px-3.5 py-2"
@@ -204,6 +212,7 @@ export function Navigation() {
                   </motion.span>
                 )}
               </Link>
+              </div>
             );
           })}
         </nav>

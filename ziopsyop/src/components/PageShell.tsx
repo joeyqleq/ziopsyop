@@ -49,10 +49,11 @@ export function SiteFooter() {
         </div>
         <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2" aria-label="Footer">
           {[
-            { href: "/", label: "DASHBOARD" },
+            { href: "/", label: "GATEWAY" },
+            { href: "/part-i", label: "PART I" },
             { href: "/analysis", label: "ANALYSIS" },
-            { href: "/battlefield", label: "BATTLEFIELD" },
-            { href: "/map", label: "ATTACK MAP" },
+            { href: "/battlefield", label: "PART II" },
+            { href: "/map", label: "MAP" },
             { href: "/about", label: "DOSSIER" },
           ].map((l) => (
             <Link
