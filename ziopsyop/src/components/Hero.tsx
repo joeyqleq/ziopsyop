@@ -3,18 +3,18 @@
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { SpaceBackground } from "@/components/fx/SpaceBackground";
-import { CinematicTitle } from "@/components/fx/CinematicTitle";
 import { DecryptText } from "@/components/fx/DecryptText";
+import { GlitchWordmark } from "@/components/fx/GlitchWordmark";
 
 const TICKER_ITEMS = [
-  "93,247 DATA POINTS INGESTED",
-  "79 MONTHS UNDER OBSERVATION",
-  "28 ACTORS TRACKED",
-  "1,269 HEBREW-LANGUAGE ARTIFACTS",
-  "ACTIVITY SPIKES CORRELATE WITH MILITARY OPERATIONS",
-  "FLAIR RATIO 3:1 — INCONSISTENT WITH STATED PURPOSE",
-  "2026 NARRATIVE PIVOT DETECTED",
-  "FPV DRONE TOPIC BLACKOUT CONFIRMED",
+  "PART I — 93,247 DATA POINTS INGESTED",
+  "PART I — FLAIR RATIO 3:1 — INCONSISTENT WITH STATED PURPOSE",
+  "PART I — 2026 NARRATIVE PIVOT DETECTED",
+  "PART II — 665 DOCUMENTED STRIKES CATALOGUED",
+  "PART II — COST ASYMMETRY 15,000:1",
+  "PART II — IHL COMPLIANCE: ONE SIDE IN VIOLATION",
+  "PART II — 19 IRON DOME UNITS DESTROYED",
+  "TWO OPERATIONS · ONE INFORMATION MACHINE",
 ];
 
 /**
@@ -59,11 +59,16 @@ export function Hero() {
           <DecryptText text="//  SIGNAL FROM NOISE" speed={34} delay={300} />
         </p>
 
-        <CinematicTitle
-          as="h1"
-          text="ZIOPSYOP"
-          className="font-mono font-bold text-[clamp(3rem,11vw,7.5rem)] leading-none tracking-[0.06em] text-foreground"
-        />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96, filter: "blur(8px)" }}
+          animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+          transition={{ delay: 0.5, duration: 1, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <h1 className="sr-only">ZIOPSYOP</h1>
+          <GlitchWordmark
+            className="font-mono font-bold text-[clamp(3rem,11vw,7.5rem)] leading-none tracking-[0.06em] text-foreground"
+          />
+        </motion.div>
 
         <motion.p
           initial={{ opacity: 0, y: 14 }}
@@ -71,10 +76,11 @@ export function Hero() {
           transition={{ delay: 0.9, duration: 0.8 }}
           className="mt-5 max-w-2xl text-sm md:text-base text-muted leading-relaxed text-balance"
         >
-          A forensic dissection of a coordinated influence operation targeting
-          Lebanese communities on Reddit. Every chart below is one piece of a
-          larger puzzle — together they show a conversation that{" "}
-          <span className="text-foreground">was never organic</span>.
+          One Zionist information machine, running{" "}
+          <span className="text-foreground">two operations</span>. One
+          manufactures the friendship that never existed; the other manufactures
+          the morality that never held. This is the forensic record of both —
+          two co-equal cases, one conclusion.
         </motion.p>
 
         <motion.div
@@ -84,10 +90,10 @@ export function Hero() {
           className="mt-7 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 font-mono text-[10px] tracking-[0.18em] text-muted-2"
         >
           <span className="px-2.5 py-1 border border-borderc rounded bg-black/40">
-            r/ForbiddenBromance
+            TWO FRONTS
           </span>
           <span className="text-primary/60">/</span>
-          <span>SEPT 2019 — MAR 2026</span>
+          <span>2019 — 2026</span>
           <span className="text-primary/60">/</span>
           <span>CASE STATUS: <span className="text-threat glow-threat">ACTIVE</span></span>
         </motion.div>
@@ -126,7 +132,7 @@ export function Hero() {
         aria-hidden="true"
       >
         <span className="font-mono text-[9px] tracking-[0.4em] text-muted-2">
-          BEGIN REVIEW
+          SELECT OPERATION
         </span>
         <motion.span
           animate={{ y: [0, 5, 0], opacity: [0.3, 1, 0.3] }}
